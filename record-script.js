@@ -1,3 +1,6 @@
+// TODO: add checks for reserved keywords
+// TODO: check order of returned searches
+
 // Prameters and defaults
 var recordScript = {
   RESERVED_KEYWORDS: ['index', 'delete', 'update', 'created_at', 'updated_at']
@@ -11,6 +14,7 @@ var Record = function (name) {
 
   // Constant used to create a new class
   var NEW_CLASS = {next: 0, indices: []};
+  var RESERVED_KEYWORDS = ['index', 'delete', 'update', 'created_at', 'updated_at'];
 
   // PRIVATE FUNCTIONS
 
@@ -28,7 +32,6 @@ var Record = function (name) {
   };
 
   // Saves any changes to the records to local storage
-  // TODO: add checks for reserved keywords
   var save = function () {
     localStorage.setItem(name, JSON.stringify(records));
   };
@@ -49,6 +52,20 @@ var Record = function (name) {
 
     this.updated_at = getTime();
     save();
+  };
+
+  // Matches records against a parameter and value, and returns an array of records
+  // that match.
+  var match = function (recordsToSearch, attribute, value) {
+    var foundRecords = [];
+
+    for (var i = 0; i < recordsToSearch.length; i++) {
+      if (recordsToSearch[i] && recordsToSearch[i][attribute] === value) {
+        foundRecords.push(recordsToSearch[i]);
+      }
+    }
+
+    return foundRecords;
   };
 
   // Attaches necessary functions to delete and update to a record object or object
@@ -133,8 +150,24 @@ var Record = function (name) {
     return this.find('last');
   }
 
+  // Allows for queries of local storage database based on a criteria passed in. The criteria
+  // should be an object, with the keys being parameter names and the value being values
+  // to match
   this.where = function (criteria) {
-    
+    var allRecords = [];
+    var foundRecords = [];
+
+    for (record in records) {
+      if (NEW_CLASS[record] === undefined) {
+        foundRecords.push(records[record]);
+      }
+    }
+
+    for (key in criteria) {
+      foundRecords = match(foundRecords, key, criteria[key]);
+    }
+
+    return foundRecords;
   };
 
 };
