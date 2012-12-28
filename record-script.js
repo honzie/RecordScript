@@ -1,6 +1,6 @@
 // Prameters and defaults
 var recordScript = {
-  RESERVED_KEYWORDS: ['index', 'delete', 'update']
+  RESERVED_KEYWORDS: ['index', 'delete', 'update', 'created_at', 'updated_at']
 };
 
 // Instantiates a new RecordScript object.
@@ -13,6 +13,13 @@ var Record = function (name) {
   var NEW_CLASS = {next: 0, indices: []};
 
   // PRIVATE FUNCTIONS
+
+  // Returns the current time in ms. Wrapped as own function for future
+  // support of browsers that don't support Date.now() but do support
+  // local storage (i.e. IE7/8)
+  var getTime = function () {
+    return Date.now();
+  };
 
   // Gets the records for a given name. If this is null, creates a new RecordScript object
   // so we can write to it.
@@ -33,10 +40,16 @@ var Record = function (name) {
     save();
   };
 
-  // Updates a record
-  // TODO
-  var update = function () {
+  // Updates a record, using the properties supplied to override or supplement
+  // existing properties
+  var update = function (properties) {
+    for (key in properties) {
+      this.key = properties.key;
+    }
 
+    this.updated_at = getTime();
+
+    save();
   };
 
   // Attaches necessary functions to delete and update to a record object or object
@@ -74,6 +87,12 @@ var Record = function (name) {
 
   // Adds a new record to the class
   this.new = function (properties) {
+    // Add created at and updated at
+    var time = getTime();
+    properties = properties || {};
+    properties.created_at = time;
+    properties.updated_at = time;
+
     // Assigns the next index to the properties input, then increments the next index
     records[records.next] = properties;
     records.indices.push(records.next);
@@ -104,6 +123,16 @@ var Record = function (name) {
       return foundRecords;
     }
   };
+
+  // Returns the first record
+  this.first = function () {
+    return this.find('first');
+  }
+
+  // Returns the last record
+  this.last = function () {
+    return this.find('last');
+  }
 
   this.where = function (criteria) {
     
