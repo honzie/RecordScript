@@ -44,11 +44,10 @@ var Record = function (name) {
   // existing properties
   var update = function (properties) {
     for (key in properties) {
-      this.key = properties.key;
+      this[key] = properties[key];
     }
 
     this.updated_at = getTime();
-
     save();
   };
 
