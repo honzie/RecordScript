@@ -100,15 +100,19 @@ var Record = function (name) {
   this.new = function (properties) {
     // Add created at and updated at
     var time = getTime();
+    var id = records.next;
+
     properties = properties || {};
     properties.created_at = time;
     properties.updated_at = time;
 
     // Assigns the next index to the properties input, then increments the next index
-    records[records.next] = properties;
-    records.indices.push(records.next);
+    records[id] = properties;
+    records.indices.push(id);
     records.next++;
     save();
+
+    return prepRecord(properties, id);
   };
 
   // Returns records based on criteria, which can either be a command phrase, a single id,
