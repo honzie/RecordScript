@@ -36,7 +36,45 @@ this is optional.
 Querying Records
 ------------
 
+You can query multiple things about your records. In general, this is made to match the ActiveRecord patterns
+used in Rails relatively well.
 
+One big difference is that all functions in JS have to be invoked, so you have to use parens '()', where you
+may not have to in Ruby. Another difference is that parameters are passed in as objects using loose JSON
+formatting, instead of using hash rockets.
+
+## Count
+
+To see how many records you have, call count:
+
+    people.count()
+
+## Find
+
+You can find records by a keyword, an id, or an array of ids. The keywords available in RecordScript are
+'all', 'first' and 'last'.
+
+    people.find('all');   // Returns an array of all people records
+    people.find('first'); // Returns the first record
+    people.find('last');  // Returns the last record
+    people.find(4);       // Returns the person with a record with an ID of 4
+    people.find(4, 8);    // Returns an array of people records where the ID is either 4 or 8
+
+If no record is found, null is returned.
+
+For all, first and last, there are aliases to the above functions off of the base object:
+
+    people.all();
+    people.first();
+    people.last();
+
+## Getting properties from objects
+
+After receiving a record object, extracting properties is straightforward:
+
+    me = people.first();
+    me.id;                 // Returns the id associated with the first record
+    me.name;               // In this case, would return 'Honzie'
 
 Updating Records
 ------------
