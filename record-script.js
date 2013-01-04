@@ -1,11 +1,3 @@
-// TODO: add checks for reserved keywords
-// TODO: check order of returned searches
-
-// Prameters and defaults
-var recordScript = {
-  RESERVED_KEYWORDS: ['index', 'delete', 'update', 'created_at', 'updated_at']
-};
-
 // Instantiates a new RecordScript object.
 // @param name: String, matching the name of the base class to look up
 var Record = function (name) {
@@ -14,7 +6,7 @@ var Record = function (name) {
 
   // Constant used to create a new class
   var NEW_CLASS = {next: 0, indices: []};
-  var RESERVED_KEYWORDS = ['index', 'delete', 'update', 'created_at', 'updated_at'];
+  var RESERVED_KEYWORDS = ['id', 'delete', 'update', 'created_at', 'updated_at'];
 
   // PRIVATE FUNCTIONS
 
@@ -54,39 +46,39 @@ var Record = function (name) {
     save();
   };
 
-  // Matches records against a parameter and value, and returns an array of records
-  // that match.
-  var match = function (recordsToSearch, attribute, value) {
-    var foundRecords = [];
+  // Strips a record down to only the fields specified, and returns it.
+  // Fields can be a string or array of strings
+  var stripRecord = function (record, fields) {
+    var strippedRecord = {};
 
-    for (var i = 0; i < recordsToSearch.length; i++) {
-      if (recordsToSearch[i] && recordsToSearch[i][attribute] === value) {
-        foundRecords.push(recordsToSearch[i]);
+    if (typeof fields === 'string') {
+      strippedRecord[fields] = record[fields];
+    } else {
+      for (var i = 0; i < fields.length; i++) {
+        var field = fields[i];
+        strippedRecord[field] = record[field];
       }
     }
 
-    return foundRecords;
+    return strippedRecord;
   };
 
   // Attaches necessary functions to delete and update to a record object or object
   // containing record objects
-  // todo: combine this and prepRecord, maybe
-  var attachControls = function (record, index) {
+  var prepRecord = function (record, id) {
     // If no record found, return null
     if (!record) {
       return null;
     }
 
-    record.index = index;
+    record.id = id;
     record.delete = remove;
     record.update = update;
     return record;
   }
 
-  var prepRecord = function (index) {
-    var record = records[index];
-
-    return attachControls(record, index);
+  var prepRecordById = function (id) {
+    return prepRecord(records[id], id);
   }
 
   // VARIABLES
@@ -137,6 +129,8 @@ var Record = function (name) {
       }
 
       return foundRecords;
+    } else {
+      return null;
     }
   };
 
@@ -152,22 +146,42 @@ var Record = function (name) {
 
   // Allows for queries of local storage database based on a criteria passed in. The criteria
   // should be an object, with the keys being parameter names and the value being values
-  // to match
-  this.where = function (criteria) {
-    var allRecords = [];
+  // to match.
+  //
+  // params is an optional argument that contains any of the following in a map
+  // limit: The maximum number of records to return
+  // only: The names of the fields to return in the record. Can be a string or an array of strings
+  this.where = function (criteria, params) {
     var foundRecords = [];
+    var searchIndices = records.indices;
 
-    for (record in records) {
-      if (NEW_CLASS[record] === undefined) {
-        foundRecords.push(records[record]);
+    params = params || {};
+
+    // Loop through the records, or at least enough to satisfy the limit requirement
+    for (var i = 0; i < searchIndices.length && (!params.limit || foundRecords.length < params.limit); i++) {
+      var id = searchIndices[i];
+      var record = records[id];
+      var found = true;
+
+      // Loop through each criteria. If a single one does not match, move on
+      for (field in criteria) {
+        if (record[field] !== criteria[field]) {
+          found = false;
+          break;
+        }
       }
-    }
 
-    for (key in criteria) {
-      foundRecords = match(foundRecords, key, criteria[key]);
+      // If the record is a match to the criteria, then push it into the foundRecords.
+      // If a criteria of fields to return was set with an 'only' param, only return those fields
+      if (found) {
+        if (params.only) {
+          foundRecords.push(prepRecord(stripRecord(record, params.only), id));
+        } else {
+          foundRecords.push(prepRecord(record, id));
+        }
+      }
     }
 
     return foundRecords;
   };
-
 };
