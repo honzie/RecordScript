@@ -112,7 +112,7 @@ Updating a record is as simple as passing in an object with fields and values to
 with.
 
     var me = people.first();
-    me.update({"name": "Hans"};
+    me.update({"name": "Hans"});
 
 Calling udpate automatically saves the data to local storage.
 
