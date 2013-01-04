@@ -26,6 +26,7 @@ var Record = function (name) {
   // Saves any changes to the records to local storage
   var save = function () {
     localStorage.setItem(name, JSON.stringify(records));
+    load();
   };
 
   // Deletes a record
@@ -38,11 +39,13 @@ var Record = function (name) {
   // Updates a record, using the properties supplied to override or supplement
   // existing properties
   var update = function (properties) {
+    var record = records[this.id];
+
     for (key in properties) {
-      this[key] = properties[key];
+      record[key] = properties[key];
     }
 
-    this.updated_at = getTime();
+    record.updated_at = getTime();
     save();
   };
 
@@ -120,12 +123,12 @@ var Record = function (name) {
     }
 
     if (typeof criteria === 'number') {
-      return prepRecord(criteria);
+      return prepRecordById(criteria);
     } else if (Array.isArray(criteria)) {
       var foundRecords = [];
 
       for (var i = 0; i < criteria.length; i++) {
-        foundRecords.push(prepRecord(criteria[i]));
+        foundRecords.push(prepRecordById(criteria[i]));
       }
 
       return foundRecords;
@@ -150,7 +153,7 @@ var Record = function (name) {
   //
   // params is an optional argument that contains any of the following in a map
   // limit: The maximum number of records to return
-  // only: The names of the fields to return in the record. Can be a string or an array of strings
+  // select: The names of the fields to return in the record. Can be a string or an array of strings
   this.where = function (criteria, params) {
     var foundRecords = [];
     var searchIndices = records.indices;
@@ -172,10 +175,10 @@ var Record = function (name) {
       }
 
       // If the record is a match to the criteria, then push it into the foundRecords.
-      // If a criteria of fields to return was set with an 'only' param, only return those fields
+      // If a criteria of fields to return was set with an 'select' param, only return those fields
       if (found) {
-        if (params.only) {
-          foundRecords.push(prepRecord(stripRecord(record, params.only), id));
+        if (params.select) {
+          foundRecords.push(prepRecord(stripRecord(record, params.select), id));
         } else {
           foundRecords.push(prepRecord(record, id));
         }
